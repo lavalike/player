@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.SurfaceView
 import android.widget.FrameLayout
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -11,14 +12,17 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
+import com.google.android.exoplayer2.video.VideoListener
 
 /**
  * player view
  * Created by wangzhen on 12/4/20.
  */
 class PlayerView : FrameLayout {
-    var surfaceView: SurfaceView? = null
+    private var container: AspectRatioFrameLayout? = null
+    private var surfaceView: SurfaceView? = null
     var player: SimpleExoPlayer? = null
+    private var url: String? = null
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
@@ -28,23 +32,71 @@ class PlayerView : FrameLayout {
         defStyleAttr
     ) {
         setBackgroundColor(Color.BLACK)
-        addView(SurfaceView(context).apply {
-            surfaceView = this
-        }, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+
+        container = AspectRatioFrameLayout(context).apply {
+            addView(SurfaceView(context).apply {
+                surfaceView = this
+            }, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+        }
+        this@PlayerView.addView(
+            container,
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.CENTER
+            })
     }
 
     fun play(url: String) {
-        val player = ExoPlayerFactory.newSimpleInstance(context)
-        surfaceView?.let {
-            player.clearVideoSurfaceView(it)
-            player.setVideoSurfaceView(it)
+        this.url = url
+        stop()
+        if (player == null) {
+            player = ExoPlayerFactory.newSimpleInstance(context)
         }
-        player.prepare(buildMediaSource(Uri.parse(url)))
-        player.playWhenReady = true
+        player?.let { plr ->
+            surfaceView?.let {
+                plr.setVideoSurfaceView(it)
+                plr.addVideoListener(listener)
+            }
+            plr.prepare(buildMediaSource(Uri.parse(url)))
+            plr.playWhenReady = true
+        }
+    }
+
+    fun pause() {
+        player?.playWhenReady = false
+    }
+
+    fun resume() {
+        player?.playWhenReady = true
+    }
+
+    fun stop() {
+        player?.let {
+            it.clearVideoSurfaceView(surfaceView)
+            it.removeVideoListener(listener)
+            it.release()
+        }
     }
 
     private fun buildMediaSource(uri: Uri): MediaSource {
         return ExtractorMediaSource.Factory(DefaultHttpDataSourceFactory("exoplayer"))
             .createMediaSource(uri)
+    }
+
+    private val listener = object : VideoListener {
+        override fun onVideoSizeChanged(
+            width: Int,
+            height: Int,
+            unappliedRotationDegrees: Int,
+            pixelWidthHeightRatio: Float
+        ) {
+            super.onVideoSizeChanged(width, height, unappliedRotationDegrees, pixelWidthHeightRatio)
+            container?.setAspectRatio(
+                if (height == 0) {
+                    1f
+                } else {
+                    (width * pixelWidthHeightRatio) / height
+                }
+            )
+        }
     }
 }

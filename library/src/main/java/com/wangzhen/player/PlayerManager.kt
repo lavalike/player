@@ -1,6 +1,8 @@
 package com.wangzhen.player
 
 import android.widget.FrameLayout
+import com.wangzhen.player.controller.Controllers
+import com.wangzhen.player.controller.UIController
 import com.wangzhen.player.ui.PlayerView
 
 /**
@@ -9,20 +11,32 @@ import com.wangzhen.player.ui.PlayerView
  */
 class PlayerManager {
     companion object {
+        var playerView: PlayerView? = null
+
         fun play(url: String, container: FrameLayout) {
-            val context = container.context
+            play(url, container, null)
+        }
 
-            val playerView = PlayerView(context)
-            playerView.play(url)
-
+        fun play(url: String, container: FrameLayout, controllers: Controllers?) {
             container.removeAllViews()
             container.addView(
-                playerView,
+                PlayerView(container.context).apply {
+                    playerView = this
+                    play(url)
+                },
                 FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
                 )
             )
+
+            var localControllers = controllers
+            if (localControllers == null) {
+                localControllers = Controllers().apply {
+                    enqueue(UIController(container))
+                }
+            }
+            localControllers.setPlayerView(playerView).run()
         }
     }
 }
