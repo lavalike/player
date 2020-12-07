@@ -48,9 +48,7 @@ class PlayerView : FrameLayout {
     fun play(url: String) {
         this.url = url
         stop()
-        if (player == null) {
-            player = ExoPlayerFactory.newSimpleInstance(context)
-        }
+        player = ExoPlayerFactory.newSimpleInstance(context)
         player?.let { plr ->
             surfaceView?.let {
                 plr.setVideoSurfaceView(it)
@@ -58,7 +56,12 @@ class PlayerView : FrameLayout {
             }
             plr.prepare(buildMediaSource(Uri.parse(url)))
             plr.playWhenReady = true
+            plr.seekTo(0)
         }
+    }
+
+    fun replay() {
+        this.url?.let { play(it) }
     }
 
     fun pause() {
@@ -71,8 +74,8 @@ class PlayerView : FrameLayout {
 
     fun stop() {
         player?.let {
-            it.clearVideoSurfaceView(surfaceView)
             it.removeVideoListener(listener)
+            it.clearVideoSurfaceView(surfaceView)
             it.release()
         }
     }

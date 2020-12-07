@@ -13,6 +13,7 @@ import com.wangzhen.player.R
 class UIController(private val container: FrameLayout) : Controller() {
     private var isPlaying: Boolean = true
     private lateinit var btnPlayPause: ImageView
+    private lateinit var btnReplay: ImageView
 
     override fun run() {
         val view = View.inflate(container.context, R.layout.player_ui_controller_layout, null)
@@ -28,6 +29,14 @@ class UIController(private val container: FrameLayout) : Controller() {
                     setImageResource(R.mipmap.module_player_controls_pause)
                 }
                 isPlaying = !isPlaying
+            }
+        }
+        view.findViewById<ImageView>(R.id.btn_replay).apply {
+            btnReplay = this
+            setOnClickListener {
+                playerView?.replay()
+                btnReplay.visibility = View.GONE
+                btnPlayPause.visibility = View.VISIBLE
             }
         }
 
@@ -49,7 +58,8 @@ class UIController(private val container: FrameLayout) : Controller() {
                 }
                 Player.STATE_ENDED -> {
                     playerView?.stop()
-                    btnPlayPause.setImageResource(R.mipmap.module_player_controls_play)
+                    btnReplay.visibility = View.VISIBLE
+                    btnPlayPause.visibility = View.GONE
                 }
             }
         }
