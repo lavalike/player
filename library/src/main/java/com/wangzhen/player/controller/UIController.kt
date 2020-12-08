@@ -22,6 +22,14 @@ class UIController(private val container: FrameLayout) : Controller() {
     override fun run() {
         val view = View.inflate(container.context, R.layout.player_ui_controller_layout, null)
         container.addView(view)
+        initViews(view)
+        playerView?.player?.let { player ->
+            player.removeListener(listener)
+            player.addListener(listener)
+        }
+    }
+
+    private fun initViews(view: View) {
         view.findViewById<ImageView>(R.id.btn_play_pause).apply {
             btnPlayPause = this
             setOnClickListener {
@@ -51,10 +59,8 @@ class UIController(private val container: FrameLayout) : Controller() {
             animation.duration = 1000
             animation.start()
         }
-        playerView?.player?.let { player ->
-            player.removeListener(listener)
-            player.addListener(listener)
-        }
+        view.removeOnAttachStateChangeListener(lifecycleListener)
+        view.addOnAttachStateChangeListener(lifecycleListener)
         updateState(Player.STATE_BUFFERING)
     }
 
@@ -75,6 +81,17 @@ class UIController(private val container: FrameLayout) : Controller() {
                 btnReplay.visibility = View.VISIBLE
             }
         }
+    }
+
+    private val lifecycleListener = object : View.OnAttachStateChangeListener {
+        override fun onViewAttachedToWindow(v: View) {
+
+        }
+
+        override fun onViewDetachedFromWindow(v: View) {
+            playerView?.stop()
+        }
+
     }
 
     private val listener = object : Player.EventListener {
