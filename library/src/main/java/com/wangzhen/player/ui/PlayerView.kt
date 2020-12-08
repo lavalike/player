@@ -47,8 +47,9 @@ class PlayerView : FrameLayout {
 
     fun play(url: String) {
         this.url = url
-        stop()
-        player = ExoPlayerFactory.newSimpleInstance(context)
+        if (player == null) {
+            player = ExoPlayerFactory.newSimpleInstance(context)
+        }
         player?.let { plr ->
             surfaceView?.let {
                 plr.setVideoSurfaceView(it)

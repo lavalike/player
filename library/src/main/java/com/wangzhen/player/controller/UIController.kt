@@ -1,6 +1,9 @@
 package com.wangzhen.player.controller
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.google.android.exoplayer2.Player
@@ -11,9 +14,10 @@ import com.wangzhen.player.R
  * Created by wangzhen on 12/4/20.
  */
 class UIController(private val container: FrameLayout) : Controller() {
-    private var isPlaying: Boolean = true
+    private var isPlaying: Boolean = false
     private lateinit var btnPlayPause: ImageView
     private lateinit var btnReplay: ImageView
+    private lateinit var ivLoading: ImageView
 
     override fun run() {
         val view = View.inflate(container.context, R.layout.player_ui_controller_layout, null)
@@ -35,33 +39,48 @@ class UIController(private val container: FrameLayout) : Controller() {
             btnReplay = this
             setOnClickListener {
                 playerView?.replay()
-                btnReplay.visibility = View.GONE
-                btnPlayPause.visibility = View.VISIBLE
+                updateState(Player.STATE_BUFFERING)
             }
         }
-
+        view.findViewById<ImageView>(R.id.iv_loading).apply {
+            ivLoading = this
+            val animation = ObjectAnimator.ofFloat(ivLoading, "rotation", 0f, 359f)
+            animation.repeatCount = ValueAnimator.INFINITE
+            animation.repeatMode = ValueAnimator.RESTART
+            animation.interpolator = LinearInterpolator()
+            animation.duration = 1000
+            animation.start()
+        }
         playerView?.player?.let { player ->
             player.removeListener(listener)
             player.addListener(listener)
+        }
+        updateState(Player.STATE_BUFFERING)
+    }
+
+    private fun updateState(state: Int) {
+        ivLoading.visibility = View.GONE
+        btnPlayPause.visibility = View.GONE
+        btnReplay.visibility = View.GONE
+        when (state) {
+            Player.STATE_BUFFERING -> {
+                ivLoading.visibility = View.VISIBLE
+            }
+            Player.STATE_READY -> {
+                isPlaying = true
+                btnPlayPause.visibility = View.VISIBLE
+            }
+            Player.STATE_ENDED -> {
+                isPlaying = false
+                btnReplay.visibility = View.VISIBLE
+            }
         }
     }
 
     private val listener = object : Player.EventListener {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             super.onPlayerStateChanged(playWhenReady, playbackState)
-            when (playbackState) {
-                Player.STATE_BUFFERING -> {
-
-                }
-                Player.STATE_READY -> {
-
-                }
-                Player.STATE_ENDED -> {
-                    playerView?.stop()
-                    btnReplay.visibility = View.VISIBLE
-                    btnPlayPause.visibility = View.GONE
-                }
-            }
+            updateState(playbackState)
         }
     }
 }
