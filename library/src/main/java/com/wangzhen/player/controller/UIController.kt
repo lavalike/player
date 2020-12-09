@@ -6,10 +6,12 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.SeekBar
+import android.widget.TextView
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.wangzhen.player.R
 import com.wangzhen.player.type.PlayerState
+import com.wangzhen.player.utils.FormatUtils
 
 /**
  * UIController
@@ -23,6 +25,7 @@ class UIController(private val container: FrameLayout) : Controller() {
     private lateinit var bufferLoading: View
     private lateinit var btnRetry: View
     private lateinit var seekBar: SeekBar
+    private lateinit var playerTime: TextView
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -64,10 +67,14 @@ class UIController(private val container: FrameLayout) : Controller() {
                 seekBar = this
                 setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(
-                        seekBar: SeekBar?,
+                        seekBar: SeekBar,
                         progress: Int,
                         fromUser: Boolean
                     ) {
+                        playerView?.player?.let { player ->
+                            playerTime.text =
+                                FormatUtils.formatDuration(player.duration * seekBar.progress / seekBar.max)
+                        }
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -81,6 +88,9 @@ class UIController(private val container: FrameLayout) : Controller() {
                         }
                     }
                 })
+            }
+            findViewById<TextView>(R.id.tv_player_time).apply {
+                playerTime = this
             }
         }
         view.findViewById<ImageView>(R.id.btn_replay).apply {
