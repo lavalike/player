@@ -5,12 +5,16 @@
     android:layout_height="match_parent"
     android:padding="15dp">
 
-    <ImageView
-        android:id="@+id/iv_loading"
+    <ProgressBar
+        android:id="@+id/buffer_loading"
+        style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@null"
-        android:src="@mipmap/module_player_controls_loading"
+        android:indeterminateDrawable="@drawable/module_player_buffer_progress"
+        android:indeterminateDuration="2000"
+        android:minWidth="50dp"
+        android:minHeight="50dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,8 +37,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@null"
-        android:src="@mipmap/module_player_controls_play"
+        android:src="@mipmap/module_player_controls_replay"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/btn_retry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:drawableTop="@mipmap/module_player_controls_replay"
+        android:drawablePadding="5dp"
+        android:text="播放失败"
+        android:textColor="@android:color/holo_red_light"
+        android:textSize="16sp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
