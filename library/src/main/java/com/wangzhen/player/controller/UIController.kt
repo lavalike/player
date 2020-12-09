@@ -5,6 +5,7 @@ import android.os.Looper
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.SeekBar
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.wangzhen.player.R
@@ -21,6 +22,7 @@ class UIController(private val container: FrameLayout) : Controller() {
     private lateinit var btnReplay: ImageView
     private lateinit var bufferLoading: View
     private lateinit var btnRetry: View
+    private lateinit var seekBar: SeekBar
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -57,6 +59,28 @@ class UIController(private val container: FrameLayout) : Controller() {
                         }
                     }
                 }
+            }
+            findViewById<SeekBar>(R.id.player_seek_bar).apply {
+                seekBar = this
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(
+                        seekBar: SeekBar?,
+                        progress: Int,
+                        fromUser: Boolean
+                    ) {
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar) {
+                        unScheduleDisappear()
+                    }
+
+                    override fun onStopTrackingTouch(seekBar: SeekBar) {
+                        scheduleDisappear()
+                        playerView?.player?.let { player ->
+                            player.seekTo(player.duration * seekBar.progress / seekBar.max)
+                        }
+                    }
+                })
             }
         }
         view.findViewById<ImageView>(R.id.btn_replay).apply {
@@ -119,7 +143,7 @@ class UIController(private val container: FrameLayout) : Controller() {
 
     private fun scheduleDisappear() {
         unScheduleDisappear()
-        handler.postDelayed(disappearRunnable, 2000L)
+        handler.postDelayed(disappearRunnable, 5000L)
     }
 
     private fun hideAll() {

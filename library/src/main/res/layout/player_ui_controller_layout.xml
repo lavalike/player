@@ -26,6 +26,12 @@
         android:layout_height="match_parent"
         android:visibility="visible">
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/module_player_playing_background"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
         <ImageView
             android:id="@+id/btn_play_pause"
             android:layout_width="wrap_content"
@@ -39,21 +45,34 @@
 
         <SeekBar
             android:id="@+id/player_seek_bar"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:layout_marginBottom="15dp"
             android:background="@null"
             android:indeterminateOnly="false"
             android:max="1000"
             android:maxHeight="1dp"
             android:minHeight="1dp"
-            android:progressDrawable="@drawable/module_player_progress_bar_drawable"
+            android:progressDrawable="@drawable/module_player_seek_bar_drawable"
             android:splitTrack="false"
             android:thumb="@drawable/module_player_seek_bar_thumb"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tv_player_time"
+            app:layout_constraintStart_toStartOf="parent"
             tools:progress="500" />
+
+        <TextView
+            android:id="@+id/tv_player_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
+            android:text="@string/player_default_time"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="@+id/player_seek_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/player_seek_bar" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
