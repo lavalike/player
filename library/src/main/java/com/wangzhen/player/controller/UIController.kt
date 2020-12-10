@@ -22,6 +22,7 @@ class UIController(private val container: FrameLayout) : Controller() {
     private lateinit var rootView: View
     private lateinit var containerPlaying: View
     private lateinit var btnReplay: ImageView
+    private lateinit var btnPlayPause: ImageView
     private lateinit var bufferLoading: View
     private lateinit var btnRetry: View
     private lateinit var seekBar: SeekBar
@@ -51,14 +52,13 @@ class UIController(private val container: FrameLayout) : Controller() {
         }
         containerPlaying = view.findViewById<View>(R.id.container_playing).apply {
             findViewById<ImageView>(R.id.btn_play_pause).apply {
+                btnPlayPause = this
                 setOnClickListener {
                     playerView?.player?.let { player ->
                         if (player.playWhenReady) {
-                            playerView?.pause()
-                            setImageResource(R.mipmap.module_player_controls_play)
+                            performPause()
                         } else {
-                            playerView?.resume()
-                            setImageResource(R.mipmap.module_player_controls_pause)
+                            performResume()
                         }
                     }
                 }
@@ -85,6 +85,7 @@ class UIController(private val container: FrameLayout) : Controller() {
                         scheduleDisappear()
                         playerView?.player?.let { player ->
                             player.seekTo(player.duration * seekBar.progress / seekBar.max)
+                            performResume()
                         }
                     }
                 })
@@ -114,6 +115,16 @@ class UIController(private val container: FrameLayout) : Controller() {
 
         hideAll()
         updateState(PlayerState.BUFFERING)
+    }
+
+    private fun performResume() {
+        playerView?.resume()
+        btnPlayPause.setImageResource(R.mipmap.module_player_controls_pause)
+    }
+
+    private fun performPause() {
+        playerView?.pause()
+        btnPlayPause.setImageResource(R.mipmap.module_player_controls_play)
     }
 
     private fun updateState(state: Int) {
