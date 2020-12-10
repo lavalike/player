@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
@@ -16,11 +15,10 @@ import com.wangzhen.player.type.PlayerState
 import com.wangzhen.player.utils.FormatUtils
 
 /**
- * UIController
+ * default ui controller
  * Created by wangzhen on 12/4/20.
  */
-class UIController(private val container: FrameLayout) : Controller() {
-    private var isPlaying: Boolean = false
+class DefaultUIController : Controller() {
     private lateinit var rootView: View
     private lateinit var containerPlaying: View
     private lateinit var btnReplay: ImageView
@@ -29,6 +27,7 @@ class UIController(private val container: FrameLayout) : Controller() {
     private lateinit var btnRetry: View
     private lateinit var seekBar: SeekBar
     private lateinit var playerTime: TextView
+    private var isPlaying: Boolean = false
 
     override fun run() {
         rootView = View.inflate(container.context, R.layout.player_ui_controller_layout, null)
