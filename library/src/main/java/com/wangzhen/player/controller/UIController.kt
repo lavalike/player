@@ -2,6 +2,7 @@ package com.wangzhen.player.controller
 
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -9,6 +10,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.Timeline
 import com.wangzhen.player.R
 import com.wangzhen.player.type.PlayerState
 import com.wangzhen.player.utils.FormatUtils
@@ -28,8 +30,6 @@ class UIController(private val container: FrameLayout) : Controller() {
     private lateinit var seekBar: SeekBar
     private lateinit var playerTime: TextView
 
-    private val handler = Handler(Looper.getMainLooper())
-
     override fun run() {
         rootView = View.inflate(container.context, R.layout.player_ui_controller_layout, null)
         container.addView(rootView)
@@ -47,7 +47,7 @@ class UIController(private val container: FrameLayout) : Controller() {
                     View.GONE
                 else
                     View.VISIBLE
-                checkScheduleDisappear()
+                checkScheduleTask()
             }
         }
         containerPlaying = view.findViewById<View>(R.id.container_playing).apply {
@@ -79,10 +79,12 @@ class UIController(private val container: FrameLayout) : Controller() {
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {
                         unScheduleDisappear()
+                        unScheduleProgress()
                     }
 
                     override fun onStopTrackingTouch(seekBar: SeekBar) {
                         scheduleDisappear()
+                        scheduleProgress()
                         playerView?.player?.let { player ->
                             player.seekTo(player.duration * seekBar.progress / seekBar.max)
                             performResume()
@@ -137,7 +139,7 @@ class UIController(private val container: FrameLayout) : Controller() {
             PlayerState.READY -> {
                 isPlaying = true
                 containerPlaying.visibility = View.VISIBLE
-                checkScheduleDisappear()
+                checkScheduleTask()
             }
             PlayerState.END -> {
                 btnReplay.visibility = View.VISIBLE
@@ -148,23 +150,34 @@ class UIController(private val container: FrameLayout) : Controller() {
         }
     }
 
-    private fun checkScheduleDisappear() {
+    private fun checkScheduleTask() {
         playerView?.player?.let {
             if (it.playWhenReady) {
                 scheduleDisappear()
+                scheduleProgress()
             } else {
                 unScheduleDisappear()
+                unScheduleProgress()
             }
         }
     }
 
     private fun unScheduleDisappear() {
-        handler.removeCallbacks(disappearRunnable)
+        handler.removeMessages(MSG_DISAPPEAR)
     }
 
     private fun scheduleDisappear() {
         unScheduleDisappear()
-        handler.postDelayed(disappearRunnable, 5000L)
+        handler.sendEmptyMessageDelayed(MSG_DISAPPEAR, 5000L)
+    }
+
+    private fun unScheduleProgress() {
+        handler.removeMessages(MSG_UPDATE_PROGRESS)
+    }
+
+    private fun scheduleProgress() {
+        unScheduleProgress()
+        handler.sendEmptyMessage(MSG_UPDATE_PROGRESS)
     }
 
     private fun hideAll() {
@@ -174,10 +187,6 @@ class UIController(private val container: FrameLayout) : Controller() {
         btnRetry.visibility = View.GONE
     }
 
-    private val disappearRunnable = Runnable {
-        containerPlaying.visibility = View.GONE
-    }
-
     private val lifecycleListener = object : View.OnAttachStateChangeListener {
         override fun onViewAttachedToWindow(v: View) {
 
@@ -185,6 +194,7 @@ class UIController(private val container: FrameLayout) : Controller() {
 
         override fun onViewDetachedFromWindow(v: View) {
             unScheduleDisappear()
+            unScheduleProgress()
             playerView?.stop()
         }
 
@@ -200,9 +210,44 @@ class UIController(private val container: FrameLayout) : Controller() {
             }
         }
 
+        override fun onPositionDiscontinuity(reason: Int) {
+            super.onPositionDiscontinuity(reason)
+            scheduleProgress()
+        }
+
+        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+            super.onTimelineChanged(timeline, manifest, reason)
+            scheduleProgress()
+        }
+
         override fun onPlayerError(error: ExoPlaybackException?) {
             super.onPlayerError(error)
             updateState(PlayerState.ERROR)
         }
+    }
+
+    private val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                MSG_DISAPPEAR -> {
+                    containerPlaying.visibility = View.GONE
+                }
+                MSG_UPDATE_PROGRESS -> {
+                    playerView?.player?.let { player ->
+                        val progress =
+                            (player.currentPosition * seekBar.max / player.duration + 0.5f).toInt()
+                        seekBar.progress = progress
+                        if (player.currentPosition < player.duration) {
+                            sendEmptyMessageDelayed(MSG_UPDATE_PROGRESS, 1000L)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        const val MSG_DISAPPEAR = 0
+        const val MSG_UPDATE_PROGRESS = 1
     }
 }
